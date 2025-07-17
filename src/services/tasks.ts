@@ -42,6 +42,7 @@ export const tasksService = {
    * Criar nova tarefa
    */
   async createTask(taskData: CreateTaskRequest): Promise<Task> {
+    console.log("Creating task with data:", taskData);
     return await apiPost<Task>('/tasks/create', taskData);
   },
 

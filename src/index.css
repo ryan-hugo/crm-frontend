@@ -59,3 +59,33 @@
   }
 }
 
+@layer components {
+  /* Force white background for inputs in modals */
+  .fixed input[type="text"],
+  .fixed input[type="email"],
+  .fixed input[type="password"],
+  .fixed input[type="date"],
+  .fixed input[type="number"],
+  .fixed input {
+    background-color: white !important;
+    color: #1f2937 !important;
+    color-scheme: light;
+  }
+
+  /* Ensure select components also have proper styling */
+  .fixed [role="combobox"] {
+    background-color: white !important;
+    color: #1f2937 !important;
+  }
+
+  /* Fix for date picker calendar */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0);
+    opacity: 0.7;
+  }
+
+  /* Ensure labels in modals are visible */
+  .fixed label {
+    color: #1f2937 !important;
+  }
+}

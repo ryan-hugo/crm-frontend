@@ -106,23 +106,54 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     setError("");
 
     try {
+      // Parse and validate IDs
+      const parsedContactId = contactId ? parseInt(contactId) : undefined;
+      const parsedProjectId = projectId ? parseInt(projectId) : undefined;
+
+      // Validate parsed IDs
+      if (contactId && (isNaN(parsedContactId!) || parsedContactId! <= 0)) {
+        setError("ID do contato inválido");
+        return;
+      }
+
+      if (projectId && (isNaN(parsedProjectId!) || parsedProjectId! <= 0)) {
+        setError("ID do projeto inválido");
+        return;
+      }
+
       const taskData: CreateTaskRequest | UpdateTaskRequest = {
         title: taskTitle,
         description: description || undefined,
-        due_date: dueDate || undefined,
+        due_date: dueDate ? `${dueDate}T23:59:59.000Z` : undefined,
         priority: priority as TaskPriority,
-        contact_id: contactId ? parseInt(contactId) : undefined,
-        project_id: projectId ? parseInt(projectId) : undefined,
+        contact_id: parsedContactId,
+        project_id: parsedProjectId,
       };
+
+      // Remove undefined values to clean up the payload
+      const cleanedTaskData = Object.fromEntries(
+        Object.entries(taskData).filter(([_, value]) => value !== undefined)
+      ) as CreateTaskRequest | UpdateTaskRequest;
+
+      console.log("Task data being submitted:", cleanedTaskData);
+      console.log("Form values:", {
+        taskTitle,
+        description,
+        dueDate,
+        priority,
+        contactId,
+        projectId,
+      });
 
       // Add required fields for updating
       if (task) {
-        (taskData as UpdateTaskRequest).id = task.id;
+        (cleanedTaskData as UpdateTaskRequest).id = task.id;
       }
 
-      await onSubmit(taskData);
+      await onSubmit(cleanedTaskData);
       onClose();
     } catch (err: any) {
+      console.error("Task submission error:", err);
       setError(err.message || "Erro ao salvar tarefa");
     } finally {
       setLoading(false);
@@ -191,36 +222,60 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="task-contact">Contato</Label>
-            <Select value={contactId} onValueChange={setContactId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um contato" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Nenhum contato</SelectItem>
-                {contacts.map((contact) => (
-                  <SelectItem key={contact.id} value={contact.id.toString()}>
-                    {contact.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={contactId} onValueChange={setContactId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um contato (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contacts.map((contact) => (
+                    <SelectItem key={contact.id} value={contact.id.toString()}>
+                      {contact.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {contactId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setContactId("")}
+                  className="px-3"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="task-project">Projeto</Label>
-            <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um projeto" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Nenhum projeto</SelectItem>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id.toString()}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um projeto (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {projectId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setProjectId("")}
+                  className="px-3"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
 
           {loadingData && (
