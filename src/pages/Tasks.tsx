@@ -11,6 +11,8 @@ import {
   AlertCircle,
   Edit,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { tasksService } from "../services/tasks";
 import { formatDate, isOverdue } from "../utils/formatters";
@@ -26,22 +28,86 @@ const Tasks: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
+  
+  // Estados de paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize] = useState(10); // Removido setter pois é fixo
+  const [totalItems, setTotalItems] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
 
   useEffect(() => {
-    loadTasks();
-  }, [statusFilter]);
+    const timeoutId = setTimeout(() => {
+      loadTasks();
+    }, searchTerm ? 500 : 0); // Debounce de 500ms para busca
+
+    return () => clearTimeout(timeoutId);
+  }, [statusFilter, searchTerm, currentPage]);
 
   const loadTasks = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const filters: any = {};
-      if (statusFilter) filters.status = statusFilter;
+      const params: any = {
+        page: currentPage,
+        page_size: pageSize
+      };
+      if (statusFilter) params.status = statusFilter;
+      if (searchTerm) params.search = searchTerm;
 
-      const data = await tasksService.getTasks(filters);
-      setTasks(Array.isArray(data) ? data : []);
+      console.log("=== LOADING TASKS ===");
+      console.log("Params:", params);
+      
+      const response = await tasksService.getTasks(params);
+      console.log("Response received:", response);
+      console.log("Response type:", typeof response);
+      console.log("Response keys:", Object.keys(response || {}));
+      console.log("Has pagination?", response?.pagination);
+      
+      // Verificar se a resposta tem a estrutura esperada
+      if (!response) {
+        throw new Error("Resposta vazia do servidor");
+      }
+      
+      if (!response.tasks) {
+        console.warn("Resposta não contém 'tasks', estrutura:", response);
+        // Talvez seja um array direto de tarefas
+        if (Array.isArray(response)) {
+          setTasks(response);
+          setTotalPages(1);
+          setTotalItems(response.length);
+          setHasNext(false);
+          setHasPrev(false);
+          return;
+        }
+      }
+      
+      // Usar estrutura esperada ou valores padrão
+      const tasks = response.tasks || [];
+      const pagination = response.pagination || {
+        current_page: 1,
+        total_pages: 1,
+        page_size: pageSize,
+        total_items: tasks.length,
+        has_next: false,
+        has_prev: false
+      };
+      
+      // Atualizar estados com a resposta da paginação
+      setTasks(tasks);
+      setTotalPages(pagination.total_pages);
+      setTotalItems(pagination.total_items);
+      setHasNext(pagination.has_next);
+      setHasPrev(pagination.has_prev);
+      // pageSize é fixo, não precisa atualizar
+      
+      console.log("Tasks loaded:", tasks.length);
+      console.log("Pagination info:", pagination);
+      console.log("=== END LOADING TASKS ===");
     } catch (err: any) {
+      console.error("Tasks page: error loading tasks:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -55,7 +121,13 @@ const Tasks: React.FC = () => {
           ? await tasksService.completeTask(task.id)
           : await tasksService.uncompleteTask(task.id);
 
-      setTasks((prev) => prev.map((t) => (t.id === task.id ? updatedTask : t)));
+      // Se há filtro de status, recarregar para evitar inconsistências
+      if (statusFilter) {
+        loadTasks();
+      } else {
+        // Se não há filtro, apenas atualizar localmente
+        setTasks((prev) => prev.map((t) => (t.id === task.id ? updatedTask : t)));
+      }
     } catch (err: any) {
       console.error("Erro ao atualizar tarefa:", err);
     }
@@ -84,15 +156,27 @@ const Tasks: React.FC = () => {
 
       if ("id" in taskData) {
         // It's an update
+        console.log("=== UPDATING TASK ===");
         await tasksService.updateTask(taskData.id, taskData);
+        console.log("Task updated successfully");
       } else {
-        // It's a creation
-        await tasksService.createTask(taskData as CreateTaskRequest);
+        // It's a creation - go to first page to see new tasks
+        console.log("=== CREATING NEW TASK ===");
+        console.log("Task data:", taskData);
+        const newTask = await tasksService.createTask(taskData as CreateTaskRequest);
+        console.log("New task created:", newTask);
+        
+        // Reset para primeira página após criar
+        setCurrentPage(1);
       }
 
-      loadTasks();
+      // Sempre recarregar após criar/editar
+      console.log("Reloading tasks...");
+      await loadTasks();
       setIsModalOpen(false);
+      console.log("Modal closed, operation complete");
     } catch (err: any) {
+      console.error("Error in handleSubmitTask:", err);
       setError(err.message);
       throw err;
     } finally {
@@ -108,12 +192,32 @@ const Tasks: React.FC = () => {
     try {
       setLoading(true);
       await tasksService.deleteTask(taskId);
-      loadTasks();
+      
+      // Simples: recarregar dados e ajustar página se necessário
+      await loadTasks();
+      
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Funções de paginação
+  const handleNextPage = () => {
+    if (hasNext) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (hasPrev) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const getPriorityText = (priority: string) => {
@@ -128,17 +232,6 @@ const Tasks: React.FC = () => {
         return priority;
     }
   };
-
-  const filteredTasks = tasks.filter((task) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      task.title.toLowerCase().includes(searchLower) ||
-      (task.description &&
-        task.description.toLowerCase().includes(searchLower)) ||
-      (task.contact && task.contact.name.toLowerCase().includes(searchLower))
-    );
-  });
 
   if (loading) {
     return (
@@ -219,7 +312,7 @@ const Tasks: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
-      ) : filteredTasks.length === 0 ? (
+      ) : tasks.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8">
@@ -241,7 +334,7 @@ const Tasks: React.FC = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredTasks.map((task) => (
+          {tasks.map((task) => (
             <Card
               key={task.id}
               className={`hover:shadow-md transition-shadow ${
@@ -365,6 +458,44 @@ const Tasks: React.FC = () => {
         task={selectedTask}
         title={selectedTask ? "Editar Tarefa" : "Nova Tarefa"}
       />
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center py-4">
+        <div className="text-sm text-gray-500">
+          Mostrando{" "}
+          <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span>
+          {" - "}
+          <span className="font-medium">
+            {Math.min(currentPage * pageSize, totalItems)}
+          </span>
+          {" de "}
+          <span className="font-medium">{totalItems}</span>
+          {" tarefas"}
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            onClick={handlePrevPage}
+            disabled={!hasPrev}
+            variant="outline"
+            size="sm"
+            className="flex items-center"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Anterior
+          </Button>
+          <Button
+            onClick={handleNextPage}
+            disabled={!hasNext}
+            variant="outline"
+            size="sm"
+            className="flex items-center"
+          >
+            Próxima
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

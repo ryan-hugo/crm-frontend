@@ -84,6 +84,18 @@ export const getAuthToken = (): string | null => {
 export const apiGet = async <T = any>(url: string, params?: any): Promise<T> => {
   try {
     const response = await api.get<ApiResponse<T>>(url, { params });
+    
+    // Log temporário para debug de tasks
+    if (url.includes('/tasks/list')) {
+      console.log("=== API GET DEBUG ===");
+      console.log("URL:", url);
+      console.log("Full response:", response);
+      console.log("response.data:", response.data);
+      console.log("response.data.data:", response.data.data);
+      console.log("Returning:", (response.data.data || response.data));
+      console.log("=== END API DEBUG ===");
+    }
+    
     return (response.data.data || response.data) as T;
   } catch (error) {
     throw handleApiError(error as AxiosError);

@@ -6,8 +6,58 @@ export const tasksService = {
   /**
    * Obter lista de tarefas
    */
-  async getTasks(params?: PaginationParams & FilterParams): Promise<Task[]> {
-    return await apiGet<Task[]>('/tasks/list', params);
+  async getTasks(params?: PaginationParams & FilterParams & { page?: number; page_size?: number }): Promise<{
+    tasks: Task[];
+    total_tasks: number;
+    pagination: {
+      current_page: number;
+      total_pages: number;
+      page_size: number;
+      total_items: number;
+      has_next: boolean;
+      has_prev: boolean;
+    };
+  }> {
+    console.log("getTasks called with params:", params);
+    const response = await apiGet<{
+      tasks: Task[];
+      total_tasks: number;
+      pagination: {
+        current_page: number;
+        total_pages: number;
+        page_size: number;
+        total_items: number;
+        has_next: boolean;
+        has_prev: boolean;
+      };
+    }>('/tasks/list', params);
+    console.log("Raw API response in service:", response);
+    console.log("Response type:", typeof response);
+    console.log("Response keys:", Object.keys(response || {}));
+    
+    // Verificar se recebemos a estrutura esperada
+    if (!response) {
+      throw new Error("Resposta vazia da API");
+    }
+    
+    // Se a resposta não tem a estrutura esperada, tentar adaptar
+    if (!response.pagination && Array.isArray(response)) {
+      console.warn("API retornou array direto, adaptando...");
+      return {
+        tasks: response as Task[],
+        total_tasks: (response as Task[]).length,
+        pagination: {
+          current_page: 1,
+          total_pages: 1,
+          page_size: (response as Task[]).length,
+          total_items: (response as Task[]).length,
+          has_next: false,
+          has_prev: false
+        }
+      };
+    }
+    
+    return response;
   },
 
   /**

@@ -64,7 +64,8 @@ const Dashboard: React.FC = () => {
 
         const contactsData =
           contacts.status === "fulfilled" ? contacts.value : [];
-        const tasksData = tasks.status === "fulfilled" ? tasks.value : [];
+        const tasksResponse = tasks.status === "fulfilled" ? tasks.value : { tasks: [], total_tasks: 0, pagination: { current_page: 1, total_pages: 1, page_size: 10, total_items: 0, has_next: false, has_prev: false } };
+        const tasksData = tasksResponse.tasks || [];
         const projectsData =
           projects.status === "fulfilled" ? projects.value : [];
         const activeProjectsData =
