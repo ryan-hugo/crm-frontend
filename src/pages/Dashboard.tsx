@@ -74,6 +74,7 @@ const Dashboard: React.FC = () => {
 
         console.log("All projects data received:", projectsData);
         console.log("Active projects data received:", activeProjectsData);
+        console.log("Interactions data received:", interactionsData);
         console.log(
           "Projects with IN_PROGRESS status:",
           projectsData.filter((p: any) => p.status === "IN_PROGRESS")
@@ -105,12 +106,40 @@ const Dashboard: React.FC = () => {
               t.status === "PENDING" && new Date(t.due_date) < new Date()
           ).length,
           active_projects: activeProjectsCount,
+          total_interactions: interactionsData.length,
           recent_interactions: interactionsData.filter((i: any) => {
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
-            return new Date(i.created_at) > weekAgo;
+
+            // Use interaction date (user-defined) instead of created_at (system timestamp)
+            const interactionDate = new Date(i.date);
+            const isRecent =
+              interactionDate > weekAgo && interactionDate <= new Date();
+
+            return isRecent;
           }).length,
         };
+
+        console.log("Recent interactions calculation:");
+        console.log("Total interactions:", interactionsData.length);
+        const weekAgoDate = new Date();
+        weekAgoDate.setDate(weekAgoDate.getDate() - 7);
+        console.log("Week ago date:", weekAgoDate);
+        console.log("Current date:", new Date());
+        
+        // Debug each interaction
+        interactionsData.forEach((i: any, index: number) => {
+          const interactionDate = new Date(i.date);
+          const isRecent = interactionDate > weekAgoDate && interactionDate <= new Date();
+          console.log(`Interaction ${index + 1}:`, {
+            id: i.id,
+            date: i.date,
+            parsed_date: interactionDate,
+            is_recent: isRecent
+          });
+        });
+        
+        console.log("Recent interactions count:", data.recent_interactions);
 
         console.log("Stats calculated from individual services:", data);
       }
@@ -124,6 +153,7 @@ const Dashboard: React.FC = () => {
         completed_tasks: data?.completed_tasks || 0,
         overdue_tasks: data?.overdue_tasks || 0,
         active_projects: data?.active_projects || 0,
+        total_interactions: data?.total_interactions || 0,
         recent_interactions: data?.recent_interactions || 0,
       };
 
@@ -167,9 +197,9 @@ const Dashboard: React.FC = () => {
       link: "/projects",
     },
     {
-      title: "Interações Recentes",
-      value: stats?.recent_interactions || 0,
-      description: "Últimos 7 dias",
+      title: "Total de Interações",
+      value: (stats?.total_interactions || 0),
+      description: `${stats?.recent_interactions || 0} nos últimos 7 dias`,
       icon: MessageSquare,
       color: "text-purple-600",
       bgColor: "bg-purple-50",

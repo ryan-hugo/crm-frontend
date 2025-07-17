@@ -24,6 +24,7 @@ export interface UserStats {
   completed_tasks: number;
   overdue_tasks: number;
   active_projects: number;
+  total_interactions: number;
   recent_interactions: number;
 }
 

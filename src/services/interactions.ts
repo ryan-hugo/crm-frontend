@@ -7,7 +7,10 @@ export const interactionsService = {
    * Obter lista de interações
    */
   async getInteractions(params?: PaginationParams & FilterParams): Promise<Interaction[]> {
-    return await apiGet<Interaction[]>('/interactions/list', params);
+    console.log("Fetching interactions with params:", params);
+    const result = await apiGet<Interaction[]>('/interactions/list', params);
+    console.log("Interactions received:", result);
+    return result;
   },
 
   /**
