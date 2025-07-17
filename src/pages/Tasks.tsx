@@ -16,7 +16,7 @@ import { tasksService } from "../services/tasks";
 import { formatDate, isOverdue } from "../utils/formatters";
 import { PRIORITY_COLORS } from "../utils/constants";
 import type { Task, CreateTaskRequest, UpdateTaskRequest } from "../types/task";
-import TaskFormModal from "../components/tasks/TaskFormModal";
+import TaskFormModal from "@/components/tasks/TaskFormModal";
 
 const Tasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
