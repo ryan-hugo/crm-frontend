@@ -1,13 +1,13 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Header from './Header';
-import Sidebar from './Sidebar';
+import React from "react";
+import { Outlet } from "react-router-dom";
+import Header from "./Header";
+import Sidebar from "./Sidebar";
 
 const Layout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="flex">
+      <div className="flex pt-16">
         <Sidebar />
         <main className="flex-1 p-6 ml-64">
           <Outlet />
@@ -18,4 +18,3 @@ const Layout: React.FC = () => {
 };
 
 export default Layout;
-
