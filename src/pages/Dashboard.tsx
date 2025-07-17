@@ -18,6 +18,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { usersService } from "../services/users";
+import { contactsService } from "../services/contacts";
+import { tasksService } from "../services/tasks";
+import { projectsService } from "../services/projects";
+import { interactionsService } from "../services/interactions";
 import { useAuth } from "../hooks/useAuth";
 import type { UserStats } from "../types/api";
 
@@ -35,10 +39,81 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       setError("");
-      const data = await usersService.getUserStats();
-      setStats(data);
+
+      let data: UserStats;
+
+      try {
+        // Tentar buscar stats do endpoint dedicado primeiro
+        data = await usersService.getUserStats();
+        console.log("Stats received from /users/stats:", data);
+      } catch (statsError) {
+        console.warn(
+          "Failed to get stats from /users/stats, fetching individually:",
+          statsError
+        );
+
+        // Fallback: buscar dados individuais
+        const [contacts, tasks, projects, interactions] =
+          await Promise.allSettled([
+            contactsService.getContacts(),
+            tasksService.getTasks({ status: "PENDING" }),
+            projectsService.getProjects(),
+            interactionsService.getInteractions(),
+          ]);
+
+        const contactsData =
+          contacts.status === "fulfilled" ? contacts.value : [];
+        const tasksData = tasks.status === "fulfilled" ? tasks.value : [];
+        const projectsData =
+          projects.status === "fulfilled" ? projects.value : [];
+        const interactionsData =
+          interactions.status === "fulfilled" ? interactions.value : [];
+
+        // Montar stats manualmente
+        data = {
+          total_contacts: contactsData.length,
+          total_clients: contactsData.filter((c: any) => c.type === "CLIENT")
+            .length,
+          total_leads: contactsData.filter((c: any) => c.type === "LEAD")
+            .length,
+          pending_tasks: tasksData.filter((t: any) => t.status === "PENDING")
+            .length,
+          completed_tasks: tasksData.filter(
+            (t: any) => t.status === "COMPLETED"
+          ).length,
+          overdue_tasks: tasksData.filter(
+            (t: any) =>
+              t.status === "PENDING" && new Date(t.due_date) < new Date()
+          ).length,
+          active_projects: projectsData.filter(
+            (p: any) => p.status === "IN_PROGRESS"
+          ).length,
+          recent_interactions: interactionsData.filter((i: any) => {
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return new Date(i.created_at) > weekAgo;
+          }).length,
+        };
+
+        console.log("Stats calculated from individual services:", data);
+      }
+
+      // Ensure all stats have default values
+      const normalizedStats: UserStats = {
+        total_contacts: data?.total_contacts || 0,
+        total_clients: data?.total_clients || 0,
+        total_leads: data?.total_leads || 0,
+        pending_tasks: data?.pending_tasks || 0,
+        completed_tasks: data?.completed_tasks || 0,
+        overdue_tasks: data?.overdue_tasks || 0,
+        active_projects: data?.active_projects || 0,
+        recent_interactions: data?.recent_interactions || 0,
+      };
+
+      setStats(normalizedStats);
     } catch (err: any) {
-      setError(err.message);
+      console.error("Error loading stats:", err);
+      setError(err.message || "Erro ao carregar estatísticas");
     } finally {
       setLoading(false);
     }
@@ -180,7 +255,13 @@ const Dashboard: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-2xl font-bold">
+                  {loading ? (
+                    <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+                  ) : (
+                    stat.value
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {stat.description}
                 </p>
