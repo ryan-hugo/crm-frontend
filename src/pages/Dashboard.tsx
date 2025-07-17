@@ -1,25 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  Users, 
-  CheckSquare, 
-  Briefcase, 
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Users,
+  CheckSquare,
+  Briefcase,
   MessageSquare,
   TrendingUp,
   Clock,
-  AlertCircle
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { usersService } from '../services/users';
-import { useAuth } from '../hooks/useAuth';
-import type { UserStats } from '../types/api';
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { usersService } from "../services/users";
+import { useAuth } from "../hooks/useAuth";
+import type { UserStats } from "../types/api";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadStats();
@@ -28,7 +34,7 @@ const Dashboard: React.FC = () => {
   const loadStats = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
       const data = await usersService.getUserStats();
       setStats(data);
     } catch (err: any) {
@@ -40,72 +46,74 @@ const Dashboard: React.FC = () => {
 
   const statsCards = [
     {
-      title: 'Total de Contatos',
+      title: "Total de Contatos",
       value: stats?.total_contacts || 0,
-      description: `${stats?.total_clients || 0} clientes, ${stats?.total_leads || 0} leads`,
+      description: `${stats?.total_clients || 0} clientes, ${
+        stats?.total_leads || 0
+      } leads`,
       icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      link: '/contacts'
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      link: "/contacts",
     },
     {
-      title: 'Tarefas Pendentes',
+      title: "Tarefas Pendentes",
       value: stats?.pending_tasks || 0,
       description: `${stats?.overdue_tasks || 0} em atraso`,
       icon: CheckSquare,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      link: '/tasks'
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      link: "/tasks",
     },
     {
-      title: 'Projetos Ativos',
+      title: "Projetos Ativos",
       value: stats?.active_projects || 0,
-      description: 'Em andamento',
+      description: "Em andamento",
       icon: Briefcase,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      link: '/projects'
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      link: "/projects",
     },
     {
-      title: 'Interações Recentes',
+      title: "Interações Recentes",
       value: stats?.recent_interactions || 0,
-      description: 'Últimos 7 dias',
+      description: "Últimos 7 dias",
       icon: MessageSquare,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      link: '/interactions'
-    }
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      link: "/interactions",
+    },
   ];
 
   const quickActions = [
     {
-      title: 'Novo Contato',
-      description: 'Adicionar cliente ou lead',
+      title: "Novo Contato",
+      description: "Adicionar cliente ou lead",
       icon: Users,
-      link: '/contacts',
-      color: 'bg-blue-600 hover:bg-blue-700'
+      link: "/contacts",
+      color: "bg-blue-600 hover:bg-blue-700",
     },
     {
-      title: 'Nova Tarefa',
-      description: 'Criar nova tarefa',
+      title: "Nova Tarefa",
+      description: "Criar nova tarefa",
       icon: CheckSquare,
-      link: '/tasks',
-      color: 'bg-orange-600 hover:bg-orange-700'
+      link: "/tasks",
+      color: "bg-orange-600 hover:bg-orange-700",
     },
     {
-      title: 'Novo Projeto',
-      description: 'Iniciar novo projeto',
+      title: "Novo Projeto",
+      description: "Iniciar novo projeto",
       icon: Briefcase,
-      link: '/projects',
-      color: 'bg-green-600 hover:bg-green-700'
+      link: "/projects",
+      color: "bg-green-600 hover:bg-green-700",
     },
     {
-      title: 'Nova Interação',
-      description: 'Registrar comunicação',
+      title: "Nova Interação",
+      description: "Registrar comunicação",
       icon: MessageSquare,
-      link: '/interactions',
-      color: 'bg-purple-600 hover:bg-purple-700'
-    }
+      link: "/interactions",
+      color: "bg-purple-600 hover:bg-purple-700",
+    },
   ];
 
   if (loading) {
@@ -145,9 +153,9 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
               <p className="text-red-700">{error}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={loadStats}
                 className="ml-auto"
               >
@@ -183,7 +191,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -195,17 +203,21 @@ const Dashboard: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {quickActions.map((action, index) => (
                 <Link key={index} to={action.link}>
                   <Button
                     variant="outline"
-                    className="h-auto p-4 flex flex-col items-center space-y-2 hover:bg-gray-50"
+                    className="h-24 w-full p-4 flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 transition-all duration-200"
                   >
-                    <action.icon className="h-6 w-6" />
+                    <action.icon className="h-6 w-6 flex-shrink-0" />
                     <div className="text-center">
-                      <div className="font-medium text-sm">{action.title}</div>
-                      <div className="text-xs text-gray-500">{action.description}</div>
+                      <div className="font-medium text-sm leading-tight">
+                        {action.title}
+                      </div>
+                      <div className="text-xs text-gray-500 leading-tight">
+                        {action.description}
+                      </div>
                     </div>
                   </Button>
                 </Link>
@@ -221,9 +233,7 @@ const Dashboard: React.FC = () => {
               <Clock className="h-5 w-5 mr-2" />
               Atividade Recente
             </CardTitle>
-            <CardDescription>
-              Suas últimas ações no sistema
-            </CardDescription>
+            <CardDescription>Suas últimas ações no sistema</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -274,4 +284,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-
