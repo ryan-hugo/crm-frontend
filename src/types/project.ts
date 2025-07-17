@@ -24,6 +24,7 @@ export interface CreateProjectRequest {
   description?: string;
   start_date?: string;
   end_date?: string;
+  status?: ProjectStatus;
   client_id?: number;
 }
 

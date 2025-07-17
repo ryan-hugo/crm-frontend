@@ -100,6 +100,11 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
       // Format dates properly before submitting
       const formattedData = { ...formData };
 
+      // For new projects, always set status to IN_PROGRESS
+      if (!project) {
+        (formattedData as CreateProjectRequest).status = "IN_PROGRESS";
+      }
+
       // If there are dates, append time component to make them valid RFC3339 format
       if (formattedData.start_date) {
         formattedData.start_date = `${formattedData.start_date}T00:00:00Z`;
@@ -108,6 +113,8 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
       if (formattedData.end_date) {
         formattedData.end_date = `${formattedData.end_date}T00:00:00Z`;
       }
+
+      console.log("Submitting project data:", formattedData);
 
       await onSubmit(formattedData);
       onClose();

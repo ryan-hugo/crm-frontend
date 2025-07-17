@@ -53,11 +53,12 @@ const Dashboard: React.FC = () => {
         );
 
         // Fallback: buscar dados individuais
-        const [contacts, tasks, projects, interactions] =
+        const [contacts, tasks, projects, activeProjects, interactions] =
           await Promise.allSettled([
             contactsService.getContacts(),
             tasksService.getTasks({ status: "PENDING" }),
             projectsService.getProjects(),
+            projectsService.getActiveProjects(),
             interactionsService.getInteractions(),
           ]);
 
@@ -66,8 +67,26 @@ const Dashboard: React.FC = () => {
         const tasksData = tasks.status === "fulfilled" ? tasks.value : [];
         const projectsData =
           projects.status === "fulfilled" ? projects.value : [];
+        const activeProjectsData =
+          activeProjects.status === "fulfilled" ? activeProjects.value : [];
         const interactionsData =
           interactions.status === "fulfilled" ? interactions.value : [];
+
+        console.log("All projects data received:", projectsData);
+        console.log("Active projects data received:", activeProjectsData);
+        console.log(
+          "Projects with IN_PROGRESS status:",
+          projectsData.filter((p: any) => p.status === "IN_PROGRESS")
+        );
+
+        // Use active projects count from dedicated endpoint if available, otherwise filter
+        const activeProjectsCount =
+          activeProjectsData.length > 0
+            ? activeProjectsData.length
+            : projectsData.filter((p: any) => p.status === "IN_PROGRESS")
+                .length;
+
+        console.log("Final active projects count:", activeProjectsCount);
 
         // Montar stats manualmente
         data = {
@@ -85,9 +104,7 @@ const Dashboard: React.FC = () => {
             (t: any) =>
               t.status === "PENDING" && new Date(t.due_date) < new Date()
           ).length,
-          active_projects: projectsData.filter(
-            (p: any) => p.status === "IN_PROGRESS"
-          ).length,
+          active_projects: activeProjectsCount,
           recent_interactions: interactionsData.filter((i: any) => {
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
