@@ -1,17 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X } from 'lucide-react';
-import { contactsService } from '@/services/contacts';
-import type { Contact } from '@/types/contact';
-import type { Interaction, CreateInteractionRequest, UpdateInteractionRequest, InteractionType } from '@/types/interaction';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { X } from "lucide-react";
+import { contactsService } from "@/services/contacts";
+import type { Contact } from "@/types/contact";
+import type {
+  Interaction,
+  CreateInteractionRequest,
+  UpdateInteractionRequest,
+  InteractionType,
+} from "@/types/interaction";
 
 interface InteractionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (interactionData: CreateInteractionRequest | UpdateInteractionRequest) => Promise<void>;
+  onSubmit: (
+    interactionData: CreateInteractionRequest | UpdateInteractionRequest
+  ) => Promise<void>;
   interaction?: Interaction; // For editing existing interactions
   title: string;
 }
@@ -21,15 +34,15 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
   onClose,
   onSubmit,
   interaction,
-  title
+  title,
 }) => {
-  const [subject, setSubject] = useState('');
-  const [notes, setNotes] = useState('');
-  const [date, setDate] = useState('');
-  const [type, setType] = useState<string>('EMAIL');
-  const [contactId, setContactId] = useState<string>('');
+  const [subject, setSubject] = useState("");
+  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState("");
+  const [type, setType] = useState<string>("EMAIL");
+  const [contactId, setContactId] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
 
   // Load contacts for the dropdown
@@ -39,71 +52,76 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
         const data = await contactsService.getContacts();
         setContacts(data);
       } catch (err) {
-        console.error('Failed to load contacts', err);
+        console.error("Failed to load contacts", err);
       }
     };
-    
+
     loadContacts();
   }, []);
 
   // Populate form if editing existing interaction
   useEffect(() => {
     if (interaction) {
-      setSubject(interaction.subject || '');
-      setNotes(interaction.notes || '');
-      setDate(interaction.date || '');
-      setType(interaction.type || 'EMAIL');
-      setContactId(interaction.contact_id ? String(interaction.contact_id) : '');
+      setSubject(interaction.subject || "");
+      setNotes(interaction.notes || "");
+      setDate(interaction.date || "");
+      setType(interaction.type || "EMAIL");
+      setContactId(
+        interaction.contact_id ? String(interaction.contact_id) : ""
+      );
     } else {
       // Reset form for new interaction
-      const today = new Date().toISOString().split('T')[0];
-      setSubject('');
-      setNotes('');
+      const today = new Date().toISOString().split("T")[0];
+      setSubject("");
+      setNotes("");
       setDate(today);
-      setType('EMAIL');
-      setContactId('');
+      setType("EMAIL");
+      setContactId("");
     }
   }, [interaction]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!contactId) {
-      setError('Contato é obrigatório');
+      setError("Contato é obrigatório");
       return;
     }
 
     if (!type) {
-      setError('Tipo é obrigatório');
+      setError("Tipo é obrigatório");
       return;
     }
 
     if (!date) {
-      setError('Data é obrigatória');
+      setError("Data é obrigatória");
       return;
     }
-    
+
     setLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
-      const interactionData: CreateInteractionRequest | UpdateInteractionRequest = {
+      const interactionData:
+        | CreateInteractionRequest
+        | UpdateInteractionRequest = {
         subject: subject || undefined,
         notes: notes || undefined,
-        date,
+        // Format date with time component for proper RFC3339 format
+        date: `${date}T00:00:00Z`,
         type: type as InteractionType,
-        contact_id: parseInt(contactId, 10)
+        contact_id: parseInt(contactId, 10),
       };
-      
+
       // Add required fields for updating
       if (interaction) {
         (interactionData as UpdateInteractionRequest).id = interaction.id;
       }
-      
+
       await onSubmit(interactionData);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Erro ao salvar interação');
+      setError(err.message || "Erro ao salvar interação");
     } finally {
       setLoading(false);
     }
@@ -120,10 +138,12 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="interaction-contact">Contato <span className="text-red-500">*</span></Label>
+            <Label htmlFor="interaction-contact">
+              Contato <span className="text-red-500">*</span>
+            </Label>
             <Select value={contactId} onValueChange={setContactId} required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um contato" />
@@ -137,9 +157,11 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="interaction-type">Tipo <span className="text-red-500">*</span></Label>
+            <Label htmlFor="interaction-type">
+              Tipo <span className="text-red-500">*</span>
+            </Label>
             <Select value={type} onValueChange={setType} required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
@@ -152,7 +174,7 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="interaction-subject">Assunto</Label>
             <Input
@@ -162,9 +184,11 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
               placeholder="Assunto da interação"
             />
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="interaction-date">Data <span className="text-red-500">*</span></Label>
+            <Label htmlFor="interaction-date">
+              Data <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="interaction-date"
               type="date"
@@ -173,7 +197,7 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="interaction-notes">Notas</Label>
             <Input
@@ -183,19 +207,24 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
               placeholder="Notas sobre a interação"
             />
           </div>
-          
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md text-sm">
               {error}
             </div>
           )}
-          
+
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={loading}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Salvando...' : interaction ? 'Atualizar' : 'Criar'}
+              {loading ? "Salvando..." : interaction ? "Atualizar" : "Criar"}
             </Button>
           </div>
         </form>

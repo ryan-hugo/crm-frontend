@@ -14,14 +14,14 @@ export const contactsService = {
    * Obter apenas clientes
    */
   async getClients(params?: PaginationParams & FilterParams): Promise<Contact[]> {
-    return await apiGet<Contact[]>('/contacts', { ...params, type: 'CLIENT' });
+    return await apiGet<Contact[]>('/contacts/list', { ...params, type: 'CLIENT' });
   },
 
   /**
    * Obter apenas leads
    */
   async getLeads(params?: PaginationParams & FilterParams): Promise<Contact[]> {
-    return await apiGet<Contact[]>('/contacts', { ...params, type: 'LEAD' });
+    return await apiGet<Contact[]>('/contacts/list', { ...params, type: 'LEAD' });
   },
 
   /**

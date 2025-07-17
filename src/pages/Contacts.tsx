@@ -1,22 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Search, Users, Mail, Phone, Building, Edit, Trash2 } from 'lucide-react';
-import { contactsService } from '../services/contacts';
-import { formatDate, formatPhone, getInitials } from '../utils/formatters';
-import { STATUS_COLORS } from '../utils/constants';
-import type { Contact, CreateContactRequest, UpdateContactRequest } from '../types/contact';
-import ContactFormModal from '../components/contacts/ContactFormModal';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Plus,
+  Search,
+  Users,
+  Mail,
+  Phone,
+  Building,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import { contactsService } from "../services/contacts";
+import { formatDate, formatPhone, getInitials } from "../utils/formatters";
+import { STATUS_COLORS } from "../utils/constants";
+import type {
+  Contact,
+  CreateContactRequest,
+  UpdateContactRequest,
+} from "../types/contact";
+import ContactFormModal from "../components/contacts/ContactFormModal";
 
 const Contacts: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<Contact | undefined>(undefined);
+  const [selectedContact, setSelectedContact] = useState<Contact | undefined>(
+    undefined
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -26,11 +41,11 @@ const Contacts: React.FC = () => {
   const loadContacts = async () => {
     try {
       setLoading(true);
-      setError('');
-      
+      setError("");
+
       const filters: any = {};
       if (typeFilter) filters.type = typeFilter;
-      
+
       const data = await contactsService.getContacts(filters);
       setContacts(Array.isArray(data) ? data : []);
     } catch (err: any) {
@@ -39,34 +54,38 @@ const Contacts: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   const handleOpenCreateModal = () => {
     setSelectedContact(undefined);
     setIsModalOpen(true);
   };
-  
+
   const handleOpenEditModal = (contact: Contact) => {
     setSelectedContact(contact);
     setIsModalOpen(true);
   };
-  
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedContact(undefined);
   };
-  
-  const handleSubmitContact = async (contactData: CreateContactRequest | UpdateContactRequest) => {
+
+  const handleSubmitContact = async (
+    contactData: CreateContactRequest | UpdateContactRequest
+  ) => {
     try {
       setLoading(true);
-      
-      if ('id' in contactData) {
+
+      if ("id" in contactData) {
         // It's an update
         await contactsService.updateContact(contactData.id, contactData);
       } else {
         // It's a creation
-        await contactsService.createContact(contactData as CreateContactRequest);
+        await contactsService.createContact(
+          contactData as CreateContactRequest
+        );
       }
-      
+
       loadContacts();
       setIsModalOpen(false);
     } catch (err: any) {
@@ -76,12 +95,12 @@ const Contacts: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   const handleDeleteContact = async (contactId: number) => {
-    if (!window.confirm('Tem certeza que deseja excluir este contato?')) {
+    if (!window.confirm("Tem certeza que deseja excluir este contato?")) {
       return;
     }
-    
+
     try {
       setIsDeleting(true);
       await contactsService.deleteContact(contactId);
@@ -92,10 +111,8 @@ const Contacts: React.FC = () => {
       setIsDeleting(false);
     }
   };
-  
 
-
-  const filteredContacts = contacts.filter(contact => {
+  const filteredContacts = contacts.filter((contact) => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -124,7 +141,7 @@ const Contacts: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Contatos</h1>
           <p className="text-gray-600">Gerencie seus clientes e leads</p>
         </div>
-        
+
         <Button onClick={handleOpenCreateModal}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Contato
@@ -146,25 +163,25 @@ const Contacts: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <Button
-                variant={typeFilter === '' ? 'default' : 'outline'}
-                onClick={() => setTypeFilter('')}
+                variant={typeFilter === "" ? "default" : "outline"}
+                onClick={() => setTypeFilter("")}
                 size="sm"
               >
                 Todos
               </Button>
               <Button
-                variant={typeFilter === 'CLIENT' ? 'default' : 'outline'}
-                onClick={() => setTypeFilter('CLIENT')}
+                variant={typeFilter === "CLIENT" ? "default" : "outline"}
+                onClick={() => setTypeFilter("CLIENT")}
                 size="sm"
               >
                 Clientes
               </Button>
               <Button
-                variant={typeFilter === 'LEAD' ? 'default' : 'outline'}
-                onClick={() => setTypeFilter('LEAD')}
+                variant={typeFilter === "LEAD" ? "default" : "outline"}
+                onClick={() => setTypeFilter("LEAD")}
                 size="sm"
               >
                 Leads
@@ -193,10 +210,9 @@ const Contacts: React.FC = () => {
                 Nenhum contato encontrado
               </h3>
               <p className="text-gray-600 mb-4">
-                {searchTerm || typeFilter ? 
-                  "Tente ajustar os filtros de busca." : 
-                  "Comece adicionando seu primeiro contato."
-                }
+                {searchTerm || typeFilter
+                  ? "Tente ajustar os filtros de busca."
+                  : "Comece adicionando seu primeiro contato."}
               </p>
               <Button onClick={handleOpenCreateModal}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -208,7 +224,10 @@ const Contacts: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredContacts.map((contact) => (
-            <Card key={contact.id} className="hover:shadow-md transition-shadow">
+            <Card
+              key={contact.id}
+              className="hover:shadow-md transition-shadow"
+            >
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
@@ -216,27 +235,33 @@ const Contacts: React.FC = () => {
                       {getInitials(contact.name)}
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900">{contact.name}</h3>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[contact.type]}`}>
-                        {contact.type === 'CLIENT' ? 'Cliente' : 'Lead'}
+                      <h3 className="font-medium text-gray-900">
+                        {contact.name}
+                      </h3>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          STATUS_COLORS[contact.type]
+                        }`}
+                      >
+                        {contact.type === "CLIENT" ? "Cliente" : "Lead"}
                       </span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-gray-600">
                     <Mail className="h-4 w-4 mr-2" />
                     <span className="truncate">{contact.email}</span>
                   </div>
-                  
+
                   {contact.phone && (
                     <div className="flex items-center text-sm text-gray-600">
                       <Phone className="h-4 w-4 mr-2" />
                       <span>{formatPhone(contact.phone)}</span>
                     </div>
                   )}
-                  
+
                   {contact.company && (
                     <div className="flex items-center text-sm text-gray-600">
                       <Building className="h-4 w-4 mr-2" />
@@ -244,20 +269,20 @@ const Contacts: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-500">
                     Criado em {formatDate(contact.created_at)}
                   </p>
                 </div>
-                
+
                 <div className="flex justify-between items-center mt-4">
                   <div className="flex space-x-2">
                     <Button variant="outline" size="sm">
                       Ver Detalhes
                     </Button>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleOpenEditModal(contact)}
                     >
@@ -265,11 +290,11 @@ const Contacts: React.FC = () => {
                       Editar
                     </Button>
                   </div>
-                  
+
                   <div className="flex space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleDeleteContact(contact.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
@@ -282,7 +307,7 @@ const Contacts: React.FC = () => {
           ))}
         </div>
       )}
-      
+
       {/* Contact Form Modal */}
       <ContactFormModal
         isOpen={isModalOpen}
@@ -296,4 +321,3 @@ const Contacts: React.FC = () => {
 };
 
 export default Contacts;
-
