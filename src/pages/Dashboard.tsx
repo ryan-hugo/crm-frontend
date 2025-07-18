@@ -23,11 +23,14 @@ import { tasksService } from "../services/tasks";
 import { projectsService } from "../services/projects";
 import { interactionsService } from "../services/interactions";
 import { useAuth } from "../hooks/useAuth";
-import type { UserStats } from "../types/api";
+import type { UserStats, DashboardData, RecentActivity } from "../types/api";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -40,143 +43,129 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       setError("");
 
-      let data: UserStats;
+      let data: DashboardData;
 
       try {
-        // Tentar buscar stats do endpoint dedicado primeiro
-        data = await usersService.getUserStats();
-        console.log("Stats received from /users/stats:", data);
-      } catch (statsError) {
+        // Tentar buscar dados completos do dashboard primeiro
+        data = await usersService.getDashboardData();
+        console.log("Dashboard data received:", data);
+
+        // Extrair stats dos dados do dashboard
+        setStats(data.stats);
+        setDashboardData(data);
+      } catch (dashboardError) {
         console.warn(
-          "Failed to get stats from /users/stats, fetching individually:",
-          statsError
+          "Failed to get dashboard data, trying user stats:",
+          dashboardError
         );
 
-        // Fallback: buscar dados individuais
-        const [contacts, tasks, projects, activeProjects, interactions] =
-          await Promise.allSettled([
-            contactsService.getContacts(),
-            tasksService.getTasks({ status: "PENDING" }),
-            projectsService.getProjects(),
-            projectsService.getActiveProjects(),
-            interactionsService.getInteractions(),
-          ]);
+        try {
+          // Fallback para o endpoint de stats
+          const statsData = await usersService.getUserStats();
+          console.log("Stats received from /users/stats:", statsData);
 
-        const contactsData =
-          contacts.status === "fulfilled" ? contacts.value : [];
-        const tasksResponse =
-          tasks.status === "fulfilled"
-            ? tasks.value
-            : {
-                tasks: [],
-                total_tasks: 0,
-                pagination: {
-                  current_page: 1,
-                  total_pages: 1,
-                  page_size: 10,
-                  total_items: 0,
-                  has_next: false,
-                  has_prev: false,
-                },
-              };
-        const tasksData = tasksResponse.tasks || [];
-        const projectsData =
-          projects.status === "fulfilled" ? projects.value : [];
-        const activeProjectsData =
-          activeProjects.status === "fulfilled" ? activeProjects.value : [];
-        const interactionsData =
-          interactions.status === "fulfilled" ? interactions.value : [];
-
-        console.log("All projects data received:", projectsData);
-        console.log("Active projects data received:", activeProjectsData);
-        console.log("Interactions data received:", interactionsData);
-        console.log(
-          "Projects with IN_PROGRESS status:",
-          projectsData.filter((p: any) => p.status === "IN_PROGRESS")
-        );
-
-        // Use active projects count from dedicated endpoint if available, otherwise filter
-        const activeProjectsCount =
-          activeProjectsData.length > 0
-            ? activeProjectsData.length
-            : projectsData.filter((p: any) => p.status === "IN_PROGRESS")
-                .length;
-
-        console.log("Final active projects count:", activeProjectsCount);
-
-        // Montar stats manualmente
-        data = {
-          total_contacts: contactsData.length,
-          total_clients: contactsData.filter((c: any) => c.type === "CLIENT")
-            .length,
-          total_leads: contactsData.filter((c: any) => c.type === "LEAD")
-            .length,
-          pending_tasks: tasksData.filter((t: any) => t.status === "PENDING")
-            .length,
-          completed_tasks: tasksData.filter(
-            (t: any) => t.status === "COMPLETED"
-          ).length,
-          overdue_tasks: tasksData.filter(
-            (t: any) =>
-              t.status === "PENDING" && new Date(t.due_date) < new Date()
-          ).length,
-          active_projects: activeProjectsCount,
-          total_interactions: interactionsData.length,
-          recent_interactions: interactionsData.filter((i: any) => {
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-
-            // Use interaction date (user-defined) instead of created_at (system timestamp)
-            const interactionDate = new Date(i.date);
-            const isRecent =
-              interactionDate > weekAgo && interactionDate <= new Date();
-
-            return isRecent;
-          }).length,
-        };
-
-        console.log("Recent interactions calculation:");
-        console.log("Total interactions:", interactionsData.length);
-        const weekAgoDate = new Date();
-        weekAgoDate.setDate(weekAgoDate.getDate() - 7);
-        console.log("Week ago date:", weekAgoDate);
-        console.log("Current date:", new Date());
-
-        // Debug each interaction
-        interactionsData.forEach((i: any, index: number) => {
-          const interactionDate = new Date(i.date);
-          const isRecent =
-            interactionDate > weekAgoDate && interactionDate <= new Date();
-          console.log(`Interaction ${index + 1}:`, {
-            id: i.id,
-            date: i.date,
-            parsed_date: interactionDate,
-            is_recent: isRecent,
+          setStats(statsData);
+          setDashboardData({
+            stats: statsData,
+            recent_activities: [],
+            recent_projects: [],
+            recent_interactions: [],
+            recent_pending_tasks: [],
+            recent_contacts: [],
           });
-        });
+        } catch (statsError) {
+          console.warn(
+            "Failed to get stats from /users/stats, fetching individually:",
+            statsError
+          );
 
-        console.log("Recent interactions count:", data.recent_interactions);
+          // Fallback final: buscar dados individuais
+          const [contacts, tasks, projects, activeProjects, interactions] =
+            await Promise.allSettled([
+              contactsService.getContacts(),
+              tasksService.getTasks({ status: "PENDING" }),
+              projectsService.getProjects(),
+              projectsService.getActiveProjects(),
+              interactionsService.getInteractions(),
+            ]);
 
-        console.log("Stats calculated from individual services:", data);
+          const contactsData =
+            contacts.status === "fulfilled" ? contacts.value : [];
+          const tasksResponse =
+            tasks.status === "fulfilled"
+              ? tasks.value
+              : {
+                  tasks: [],
+                  total_tasks: 0,
+                  pagination: {
+                    current_page: 1,
+                    total_pages: 1,
+                    page_size: 10,
+                    total_items: 0,
+                    has_next: false,
+                    has_prev: false,
+                  },
+                };
+          const tasksData = tasksResponse.tasks || [];
+          const projectsData =
+            projects.status === "fulfilled" ? projects.value : [];
+          const activeProjectsData =
+            activeProjects.status === "fulfilled" ? activeProjects.value : [];
+          const interactionsData =
+            interactions.status === "fulfilled" ? interactions.value : [];
+
+          // Use active projects count from dedicated endpoint if available, otherwise filter
+          const activeProjectsCount =
+            activeProjectsData.length > 0
+              ? activeProjectsData.length
+              : projectsData.filter((p: any) => p.status === "IN_PROGRESS")
+                  .length;
+
+          // Montar stats manualmente
+          const calculatedStats: UserStats = {
+            total_contacts: contactsData.length,
+            total_clients: contactsData.filter((c: any) => c.type === "CLIENT")
+              .length,
+            total_leads: contactsData.filter((c: any) => c.type === "LEAD")
+              .length,
+            total_tasks: tasksData.length,
+            pending_tasks: tasksData.filter((t: any) => t.status === "PENDING")
+              .length,
+            completed_tasks: tasksData.filter(
+              (t: any) => t.status === "COMPLETED"
+            ).length,
+            overdue_tasks: tasksData.filter(
+              (t: any) =>
+                t.status === "PENDING" && new Date(t.due_date) < new Date()
+            ).length,
+            total_projects: projectsData.length,
+            active_projects: activeProjectsCount,
+            completed_projects: projectsData.filter(
+              (p: any) => p.status === "COMPLETED"
+            ).length,
+            total_interactions: interactionsData.length,
+            recent_interactions: interactionsData.filter((i: any) => {
+              const weekAgo = new Date();
+              weekAgo.setDate(weekAgo.getDate() - 7);
+              const interactionDate = new Date(i.date);
+              return interactionDate > weekAgo && interactionDate <= new Date();
+            }).length,
+          };
+
+          setStats(calculatedStats);
+          setDashboardData({
+            stats: calculatedStats,
+            recent_activities: [],
+            recent_projects: [],
+            recent_interactions: [],
+            recent_pending_tasks: [],
+            recent_contacts: [],
+          });
+        }
       }
-
-      // Ensure all stats have default values
-      const normalizedStats: UserStats = {
-        total_contacts: data?.total_contacts || 0,
-        total_clients: data?.total_clients || 0,
-        total_leads: data?.total_leads || 0,
-        pending_tasks: data?.pending_tasks || 0,
-        completed_tasks: data?.completed_tasks || 0,
-        overdue_tasks: data?.overdue_tasks || 0,
-        active_projects: data?.active_projects || 0,
-        total_interactions: data?.total_interactions || 0,
-        recent_interactions: data?.recent_interactions || 0,
-      };
-
-      setStats(normalizedStats);
     } catch (err: any) {
-      console.error("Error loading stats:", err);
-      setError(err.message || "Erro ao carregar estatísticas");
+      console.error("Error loading dashboard data:", err);
+      setError(err.message || "Erro ao carregar dados do dashboard");
     } finally {
       setLoading(false);
     }
@@ -195,18 +184,22 @@ const Dashboard: React.FC = () => {
       link: "/contacts",
     },
     {
-      title: "Tarefas Pendentes",
-      value: stats?.pending_tasks || 0,
-      description: `${stats?.overdue_tasks || 0} em atraso`,
+      title: "Total de Tarefas",
+      value: stats?.total_tasks || 0,
+      description: `${stats?.pending_tasks || 0} pendentes, ${
+        stats?.completed_tasks || 0
+      } concluídas`,
       icon: CheckSquare,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
       link: "/tasks",
     },
     {
-      title: "Projetos Ativos",
-      value: stats?.active_projects || 0,
-      description: "Em andamento",
+      title: "Total de Projetos",
+      value: stats?.total_projects || 0,
+      description: `${stats?.active_projects || 0} ativos, ${
+        stats?.completed_projects || 0
+      } concluídos`,
       icon: Briefcase,
       color: "text-green-600",
       bgColor: "bg-green-50",
@@ -381,11 +374,66 @@ const Dashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="text-sm text-gray-500 text-center py-8">
-                Nenhuma atividade recente encontrada.
-                <br />
-                Comece criando contatos, tarefas ou projetos!
-              </div>
+              {dashboardData?.recent_activities &&
+              dashboardData.recent_activities.length > 0 ? (
+                dashboardData.recent_activities.slice(0, 5).map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50"
+                  >
+                    <div className="flex-shrink-0">
+                      {activity.type === "TASK" && (
+                        <CheckSquare className="h-5 w-5 text-orange-600" />
+                      )}
+                      {activity.type === "PROJECT" && (
+                        <Briefcase className="h-5 w-5 text-green-600" />
+                      )}
+                      {activity.type === "CONTACT" && (
+                        <Users className="h-5 w-5 text-blue-600" />
+                      )}
+                      {activity.type === "INTERACTION" && (
+                        <MessageSquare className="h-5 w-5 text-purple-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {activity.title}
+                        </p>
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {activity.action}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 truncate">
+                        {activity.detail}
+                      </p>
+                      {activity.related_name && (
+                        <p className="text-xs text-gray-400">
+                          Relacionado a: {activity.related_name}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400">
+                        {new Date(activity.created_at).toLocaleDateString(
+                          "pt-BR",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-gray-500 text-center py-8">
+                  Nenhuma atividade recente encontrada.
+                  <br />
+                  Comece criando contatos, tarefas ou projetos!
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -412,13 +460,87 @@ const Dashboard: React.FC = () => {
                   • Você tem {stats.pending_tasks} tarefa(s) pendente(s)
                 </p>
               )}
+              {stats.active_projects > 0 && (
+                <p className="text-yellow-700">
+                  • Você tem {stats.active_projects} projeto(s) em andamento
+                </p>
+              )}
             </div>
-            <div className="mt-4">
+            <div className="mt-4 flex gap-2">
               <Link to="/tasks">
                 <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700">
                   Ver Tarefas
                 </Button>
               </Link>
+              {stats.active_projects > 0 && (
+                <Link to="/projects">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white"
+                  >
+                    Ver Projetos
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Summary Insights */}
+      {stats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2" />
+              Resumo Geral
+            </CardTitle>
+            <CardDescription>
+              Visão geral da sua performance no CRM
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {stats.total_contacts}
+                </div>
+                <div className="text-sm text-blue-700">Total de Contatos</div>
+                <div className="text-xs text-blue-600 mt-1">
+                  {stats.total_clients} clientes + {stats.total_leads} leads
+                </div>
+              </div>
+
+              <div className="text-center p-4 bg-orange-50 rounded-lg">
+                <div className="text-2xl font-bold text-orange-600">
+                  {(
+                    (stats.completed_tasks / (stats.total_tasks || 1)) *
+                    100
+                  ).toFixed(0)}
+                  %
+                </div>
+                <div className="text-sm text-orange-700">Taxa de Conclusão</div>
+                <div className="text-xs text-orange-600 mt-1">
+                  {stats.completed_tasks} de {stats.total_tasks} tarefas
+                </div>
+              </div>
+
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {(
+                    (stats.completed_projects / (stats.total_projects || 1)) *
+                    100
+                  ).toFixed(0)}
+                  %
+                </div>
+                <div className="text-sm text-green-700">
+                  Projetos Concluídos
+                </div>
+                <div className="text-xs text-green-600 mt-1">
+                  {stats.completed_projects} de {stats.total_projects} projetos
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
 import { apiGet, apiPut } from './api';
 import type { User } from '../types/auth';
-import type { UserStats } from '../types/api';
+import type { UserStats, DashboardData } from '../types/api';
 
 interface UpdateProfileRequest {
   name: string;
@@ -39,6 +39,13 @@ export const usersService = {
    */
   async getUserStats(): Promise<UserStats> {
     return await apiGet<UserStats>('/users/stats');
+  },
+
+  /**
+   * Obter dados completos do dashboard
+   */
+  async getDashboardData(): Promise<DashboardData> {
+    return await apiGet<DashboardData>('/users/dashboard');
   },
 };
 
