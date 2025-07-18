@@ -11,7 +11,6 @@ import {
   Briefcase,
   CheckSquare,
   Edit,
-  Plus,
   ExternalLink,
 } from "lucide-react";
 import { formatDate, formatPhone } from "../../utils/formatters";
@@ -27,9 +26,6 @@ interface ContactDetailsModalProps {
   onClose: () => void;
   contact: Contact | null | undefined;
   onEdit: (contact: Contact) => void;
-  onCreateInteraction?: (contact: Contact) => void;
-  onCreateTask?: (contact: Contact) => void;
-  onAddToProject?: (contact: Contact) => void;
 }
 
 interface ContactStats {
@@ -45,9 +41,6 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({
   onClose,
   contact,
   onEdit,
-  onCreateInteraction,
-  onCreateTask,
-  onAddToProject,
 }) => {
   const [stats, setStats] = useState<ContactStats>({
     totalInteractions: 0,

@@ -27,7 +27,6 @@ const Register: React.FC = () => {
     register: registerField,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {

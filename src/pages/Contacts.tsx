@@ -45,7 +45,7 @@ const Contacts: React.FC = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | undefined>(
     undefined
   );
-  const [modalContact, setModalContact] = useState<Contact | undefined>(
+  const [modalContact] = useState<Contact | undefined>(
     undefined
   );
 
@@ -83,21 +83,6 @@ const Contacts: React.FC = () => {
   const handleOpenDetailsModal = (contact: Contact) => {
     setSelectedContact(contact);
     setIsDetailsModalOpen(true);
-  };
-
-  const handleOpenInteractionModal = (contact: Contact) => {
-    setModalContact(contact);
-    setIsInteractionModalOpen(true);
-  };
-
-  const handleOpenTaskModal = (contact: Contact) => {
-    setModalContact(contact);
-    setIsTaskModalOpen(true);
-  };
-
-  const handleOpenProjectModal = (contact: Contact) => {
-    setModalContact(contact);
-    setIsProjectModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -366,9 +351,6 @@ const Contacts: React.FC = () => {
           setIsDetailsModalOpen(false);
           handleOpenEditModal(contact);
         }}
-        onCreateInteraction={handleOpenInteractionModal}
-        onCreateTask={handleOpenTaskModal}
-        onAddToProject={handleOpenProjectModal}
       />
 
       {/* Interaction Form Modal */}
