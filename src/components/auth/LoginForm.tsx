@@ -1,21 +1,26 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '../../hooks/useAuth';
-import { loginSchema, type LoginFormData } from '../../utils/validators';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "../../hooks/useAuth";
+import { loginSchema, type LoginFormData } from "../../utils/validators";
 
 const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const { login, register, isLoading } = useAuth();
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -26,36 +31,27 @@ const LoginForm: React.FC = () => {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setError('');
-      setSuccess('');
+      setError("");
+      setSuccess("");
 
-      const result = isRegistering 
-        ? await register('Usuário', data.email, data.password)
-        : await login(data.email, data.password);
+      const result = await login(data.email, data.password);
 
       if (result.success) {
         setSuccess(result.message);
-        navigate('/dashboard');
+        navigate("/dashboard");
       } else {
         setError(result.message);
       }
     } catch (err: any) {
-      setError(err.message || 'Erro inesperado');
+      setError(err.message || "Erro inesperado");
     }
-  };
-
-  const toggleMode = () => {
-    setIsRegistering(!isRegistering);
-    setError('');
-    setSuccess('');
-    reset();
   };
 
   return (
@@ -65,14 +61,9 @@ const LoginForm: React.FC = () => {
           <CardTitle className="text-2xl font-bold text-gray-900">
             Cliq CRM
           </CardTitle>
-          <CardDescription>
-            {isRegistering 
-              ? 'Crie sua conta para começar' 
-              : 'Faça login para acessar sua conta'
-            }
-          </CardDescription>
+          <CardDescription>Faça login para acessar sua conta</CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Mensagens */}
@@ -81,7 +72,7 @@ const LoginForm: React.FC = () => {
                 {error}
               </div>
             )}
-            
+
             {success && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
                 {success}
@@ -95,8 +86,8 @@ const LoginForm: React.FC = () => {
                 id="email"
                 type="email"
                 placeholder="seu@email.com"
-                {...registerField('email')}
-                className={errors.email ? 'border-red-500' : ''}
+                {...registerField("email")}
+                className={errors.email ? "border-red-500" : ""}
               />
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email.message}</p>
@@ -109,10 +100,10 @@ const LoginForm: React.FC = () => {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Sua senha"
-                  {...registerField('password')}
-                  className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                  {...registerField("password")}
+                  className={errors.password ? "border-red-500 pr-10" : "pr-10"}
                 />
                 <button
                   type="button"
@@ -127,7 +118,9 @@ const LoginForm: React.FC = () => {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -140,27 +133,27 @@ const LoginForm: React.FC = () => {
               {isSubmitting || isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {isRegistering ? 'Criando conta...' : 'Entrando...'}
+                  Entrando...
                 </div>
               ) : (
                 <div className="flex items-center">
                   <LogIn className="h-4 w-4 mr-2" />
-                  {isRegistering ? 'Criar Conta' : 'Entrar'}
+                  Entrar
                 </div>
               )}
             </Button>
 
-            {/* Toggle entre Login/Registro */}
+            {/* Link para registro */}
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                {isRegistering ? 'Já tem uma conta?' : 'Não tem uma conta?'}{' '}
+                Não tem uma conta?{" "}
                 <Button
                   type="button"
                   variant="link"
                   className="p-0 h-auto font-semibold"
-                  onClick={toggleMode}
+                  onClick={() => navigate("/register")}
                 >
-                  {isRegistering ? 'Faça login' : 'Registre-se'}
+                  Registre-se
                 </Button>
               </p>
             </div>
@@ -172,4 +165,3 @@ const LoginForm: React.FC = () => {
 };
 
 export default LoginForm;
-

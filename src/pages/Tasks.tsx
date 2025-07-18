@@ -19,6 +19,12 @@ import { formatDate, isOverdue } from "../utils/formatters";
 import { PRIORITY_COLORS } from "../utils/constants";
 import type { Task, CreateTaskRequest, UpdateTaskRequest } from "../types/task";
 import TaskFormModal from "@/components/tasks/TaskFormModal";
+import {
+  PageHeaderSkeleton,
+  FiltersSkeleton,
+  TableRowSkeleton,
+  PaginationSkeleton,
+} from "@/components/ui/skeleton";
 
 const Tasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -28,7 +34,7 @@ const Tasks: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
-  
+
   // Estados de paginação
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -38,9 +44,12 @@ const Tasks: React.FC = () => {
   const [hasPrev, setHasPrev] = useState(false);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      loadTasks();
-    }, searchTerm ? 500 : 0); // Debounce de 500ms para busca
+    const timeoutId = setTimeout(
+      () => {
+        loadTasks();
+      },
+      searchTerm ? 500 : 0
+    ); // Debounce de 500ms para busca
 
     return () => clearTimeout(timeoutId);
   }, [statusFilter, searchTerm, currentPage]);
@@ -52,25 +61,25 @@ const Tasks: React.FC = () => {
 
       const params: any = {
         page: currentPage,
-        page_size: pageSize
+        page_size: pageSize,
       };
       if (statusFilter) params.status = statusFilter;
       if (searchTerm) params.search = searchTerm;
 
       console.log("=== LOADING TASKS ===");
       console.log("Params:", params);
-      
+
       const response = await tasksService.getTasks(params);
       console.log("Response received:", response);
       console.log("Response type:", typeof response);
       console.log("Response keys:", Object.keys(response || {}));
       console.log("Has pagination?", response?.pagination);
-      
+
       // Verificar se a resposta tem a estrutura esperada
       if (!response) {
         throw new Error("Resposta vazia do servidor");
       }
-      
+
       if (!response.tasks) {
         console.warn("Resposta não contém 'tasks', estrutura:", response);
         // Talvez seja um array direto de tarefas
@@ -83,7 +92,7 @@ const Tasks: React.FC = () => {
           return;
         }
       }
-      
+
       // Usar estrutura esperada ou valores padrão
       const tasks = response.tasks || [];
       const pagination = response.pagination || {
@@ -92,9 +101,9 @@ const Tasks: React.FC = () => {
         page_size: pageSize,
         total_items: tasks.length,
         has_next: false,
-        has_prev: false
+        has_prev: false,
       };
-      
+
       // Atualizar estados com a resposta da paginação
       setTasks(tasks);
       setTotalPages(pagination.total_pages);
@@ -102,7 +111,7 @@ const Tasks: React.FC = () => {
       setHasNext(pagination.has_next);
       setHasPrev(pagination.has_prev);
       // pageSize é fixo, não precisa atualizar
-      
+
       console.log("Tasks loaded:", tasks.length);
       console.log("Pagination info:", pagination);
       console.log("=== END LOADING TASKS ===");
@@ -126,7 +135,9 @@ const Tasks: React.FC = () => {
         loadTasks();
       } else {
         // Se não há filtro, apenas atualizar localmente
-        setTasks((prev) => prev.map((t) => (t.id === task.id ? updatedTask : t)));
+        setTasks((prev) =>
+          prev.map((t) => (t.id === task.id ? updatedTask : t))
+        );
       }
     } catch (err: any) {
       console.error("Erro ao atualizar tarefa:", err);
@@ -163,9 +174,11 @@ const Tasks: React.FC = () => {
         // It's a creation - go to first page to see new tasks
         console.log("=== CREATING NEW TASK ===");
         console.log("Task data:", taskData);
-        const newTask = await tasksService.createTask(taskData as CreateTaskRequest);
+        const newTask = await tasksService.createTask(
+          taskData as CreateTaskRequest
+        );
         console.log("New task created:", newTask);
-        
+
         // Reset para primeira página após criar
         setCurrentPage(1);
       }
@@ -192,10 +205,9 @@ const Tasks: React.FC = () => {
     try {
       setLoading(true);
       await tasksService.deleteTask(taskId);
-      
+
       // Simples: recarregar dados e ajustar página se necessário
       await loadTasks();
-      
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -235,11 +247,11 @@ const Tasks: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-sm text-gray-600 mt-2">Carregando tarefas...</p>
-        </div>
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <FiltersSkeleton />
+        <TableRowSkeleton count={5} />
+        <PaginationSkeleton />
       </div>
     );
   }
@@ -463,7 +475,9 @@ const Tasks: React.FC = () => {
       <div className="flex justify-between items-center py-4">
         <div className="text-sm text-gray-500">
           Mostrando{" "}
-          <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span>
+          <span className="font-medium">
+            {(currentPage - 1) * pageSize + 1}
+          </span>
           {" - "}
           <span className="font-medium">
             {Math.min(currentPage * pageSize, totalItems)}

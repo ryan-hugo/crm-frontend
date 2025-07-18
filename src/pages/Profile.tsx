@@ -1,21 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Lock, Save, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { usersService } from '../services/users';
-import { getInitials } from '../utils/formatters';
-import { profileSchema, changePasswordSchema, type ProfileFormData, type ChangePasswordFormData } from '../utils/validators';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { User, Lock, Save, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { usersService } from "../services/users";
+import { getInitials } from "../utils/formatters";
+import {
+  profileSchema,
+  changePasswordSchema,
+  type ProfileFormData,
+  type ChangePasswordFormData,
+} from "../utils/validators";
+import { PageHeaderSkeleton, FormSkeleton } from "@/components/ui/skeleton";
 
 const Profile: React.FC = () => {
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -26,13 +38,13 @@ const Profile: React.FC = () => {
     register: registerProfile,
     handleSubmit: handleSubmitProfile,
     setValue: setValueProfile,
-    formState: { errors: errorsProfile }
+    formState: { errors: errorsProfile },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: '',
-      email: ''
-    }
+      name: "",
+      email: "",
+    },
   });
 
   // Formulário de senha
@@ -40,14 +52,14 @@ const Profile: React.FC = () => {
     register: registerPassword,
     handleSubmit: handleSubmitPassword,
     reset: resetPassword,
-    formState: { errors: errorsPassword }
+    formState: { errors: errorsPassword },
   } = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
     defaultValues: {
-      current_password: '',
-      new_password: '',
-      confirm_password: ''
-    }
+      current_password: "",
+      new_password: "",
+      confirm_password: "",
+    },
   });
 
   useEffect(() => {
@@ -57,20 +69,23 @@ const Profile: React.FC = () => {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      setError('');
-      
+      setError("");
+
       const profileData = await usersService.getProfile();
-      
+
       // Atualizar formulário com dados do perfil
-      setValueProfile('name', profileData.name || '');
-      setValueProfile('email', profileData.email || '');
-      
+      setValueProfile("name", profileData.name || "");
+      setValueProfile("email", profileData.email || "");
+
       // Atualizar contexto do usuário se necessário
-      if (profileData.name !== user?.name || profileData.email !== user?.email) {
+      if (
+        profileData.name !== user?.name ||
+        profileData.email !== user?.email
+      ) {
         updateUser({
           ...user!,
           name: profileData.name,
-          email: profileData.email
+          email: profileData.email,
         });
       }
     } catch (err: any) {
@@ -83,19 +98,19 @@ const Profile: React.FC = () => {
   const handleUpdateProfile = async (data: ProfileFormData) => {
     try {
       setSubmitting(true);
-      setError('');
-      setSuccess('');
-      
+      setError("");
+      setSuccess("");
+
       const updatedProfile = await usersService.updateProfile(data);
-      
+
       // Atualizar contexto do usuário
       updateUser({
         ...user!,
         name: updatedProfile.name,
-        email: updatedProfile.email
+        email: updatedProfile.email,
       });
-      
-      setSuccess('Perfil atualizado com sucesso!');
+
+      setSuccess("Perfil atualizado com sucesso!");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -106,16 +121,16 @@ const Profile: React.FC = () => {
   const handleChangePassword = async (data: ChangePasswordFormData) => {
     try {
       setSubmitting(true);
-      setError('');
-      setSuccess('');
-      
+      setError("");
+      setSuccess("");
+
       await usersService.changePassword({
         current_password: data.current_password,
-        new_password: data.new_password
+        new_password: data.new_password,
       });
-      
+
       resetPassword();
-      setSuccess('Senha alterada com sucesso!');
+      setSuccess("Senha alterada com sucesso!");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -125,10 +140,20 @@ const Profile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-sm text-gray-600 mt-2">Carregando perfil...</p>
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="max-w-2xl">
+          <Card>
+            <CardHeader>
+              <div className="animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-48 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-96"></div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <FormSkeleton />
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -139,7 +164,9 @@ const Profile: React.FC = () => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Perfil</h1>
-        <p className="text-gray-600">Gerencie suas informações pessoais e configurações</p>
+        <p className="text-gray-600">
+          Gerencie suas informações pessoais e configurações
+        </p>
       </div>
 
       {/* Alerts */}
@@ -150,7 +177,7 @@ const Profile: React.FC = () => {
           </CardContent>
         </Card>
       )}
-      
+
       {success && (
         <Card className="border-green-200 bg-green-50">
           <CardContent className="pt-6">
@@ -171,7 +198,7 @@ const Profile: React.FC = () => {
           <CardContent className="text-center">
             <div className="flex flex-col items-center space-y-4">
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-600 text-white text-2xl font-medium">
-                {getInitials(user?.name || '')}
+                {getInitials(user?.name || "")}
               </div>
               <div>
                 <h3 className="text-lg font-medium">{user?.name}</h3>
@@ -198,16 +225,21 @@ const Profile: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmitProfile(handleUpdateProfile)} className="space-y-4">
+              <form
+                onSubmit={handleSubmitProfile(handleUpdateProfile)}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo</Label>
                   <Input
                     id="name"
-                    {...registerProfile('name')}
-                    className={errorsProfile.name ? 'border-red-500' : ''}
+                    {...registerProfile("name")}
+                    className={errorsProfile.name ? "border-red-500" : ""}
                   />
                   {errorsProfile.name && (
-                    <p className="text-sm text-red-500">{errorsProfile.name.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errorsProfile.name.message}
+                    </p>
                   )}
                 </div>
 
@@ -216,11 +248,13 @@ const Profile: React.FC = () => {
                   <Input
                     id="email"
                     type="email"
-                    {...registerProfile('email')}
-                    className={errorsProfile.email ? 'border-red-500' : ''}
+                    {...registerProfile("email")}
+                    className={errorsProfile.email ? "border-red-500" : ""}
                   />
                   {errorsProfile.email && (
-                    <p className="text-sm text-red-500">{errorsProfile.email.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errorsProfile.email.message}
+                    </p>
                   )}
                 </div>
 
@@ -253,20 +287,29 @@ const Profile: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmitPassword(handleChangePassword)} className="space-y-4">
+              <form
+                onSubmit={handleSubmitPassword(handleChangePassword)}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="current_password">Senha Atual</Label>
                   <div className="relative">
                     <Input
                       id="current_password"
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      {...registerPassword('current_password')}
-                      className={errorsPassword.current_password ? 'border-red-500 pr-10' : 'pr-10'}
+                      type={showCurrentPassword ? "text" : "password"}
+                      {...registerPassword("current_password")}
+                      className={
+                        errorsPassword.current_password
+                          ? "border-red-500 pr-10"
+                          : "pr-10"
+                      }
                     />
                     <button
                       type="button"
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      onClick={() =>
+                        setShowCurrentPassword(!showCurrentPassword)
+                      }
                     >
                       {showCurrentPassword ? (
                         <EyeOff className="h-4 w-4 text-gray-400" />
@@ -276,7 +319,9 @@ const Profile: React.FC = () => {
                     </button>
                   </div>
                   {errorsPassword.current_password && (
-                    <p className="text-sm text-red-500">{errorsPassword.current_password.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errorsPassword.current_password.message}
+                    </p>
                   )}
                 </div>
 
@@ -285,9 +330,13 @@ const Profile: React.FC = () => {
                   <div className="relative">
                     <Input
                       id="new_password"
-                      type={showNewPassword ? 'text' : 'password'}
-                      {...registerPassword('new_password')}
-                      className={errorsPassword.new_password ? 'border-red-500 pr-10' : 'pr-10'}
+                      type={showNewPassword ? "text" : "password"}
+                      {...registerPassword("new_password")}
+                      className={
+                        errorsPassword.new_password
+                          ? "border-red-500 pr-10"
+                          : "pr-10"
+                      }
                     />
                     <button
                       type="button"
@@ -302,7 +351,9 @@ const Profile: React.FC = () => {
                     </button>
                   </div>
                   {errorsPassword.new_password && (
-                    <p className="text-sm text-red-500">{errorsPassword.new_password.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errorsPassword.new_password.message}
+                    </p>
                   )}
                 </div>
 
@@ -311,14 +362,20 @@ const Profile: React.FC = () => {
                   <div className="relative">
                     <Input
                       id="confirm_password"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      {...registerPassword('confirm_password')}
-                      className={errorsPassword.confirm_password ? 'border-red-500 pr-10' : 'pr-10'}
+                      type={showConfirmPassword ? "text" : "password"}
+                      {...registerPassword("confirm_password")}
+                      className={
+                        errorsPassword.confirm_password
+                          ? "border-red-500 pr-10"
+                          : "pr-10"
+                      }
                     />
                     <button
                       type="button"
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                     >
                       {showConfirmPassword ? (
                         <EyeOff className="h-4 w-4 text-gray-400" />
@@ -328,7 +385,9 @@ const Profile: React.FC = () => {
                     </button>
                   </div>
                   {errorsPassword.confirm_password && (
-                    <p className="text-sm text-red-500">{errorsPassword.confirm_password.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errorsPassword.confirm_password.message}
+                    </p>
                   )}
                 </div>
 
@@ -355,4 +414,3 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
-

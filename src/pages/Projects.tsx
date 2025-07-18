@@ -22,6 +22,11 @@ import type {
   UpdateProjectRequest,
 } from "../types/project";
 import ProjectFormModal from "../components/projects/ProjectFormModal";
+import {
+  PageHeaderSkeleton,
+  FiltersSkeleton,
+  CardListSkeleton,
+} from "@/components/ui/skeleton";
 
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -152,11 +157,10 @@ const Projects: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-sm text-gray-600 mt-2">Carregando projetos...</p>
-        </div>
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <FiltersSkeleton />
+        <CardListSkeleton count={6} />
       </div>
     );
   }

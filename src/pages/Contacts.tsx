@@ -21,6 +21,11 @@ import type {
   UpdateContactRequest,
 } from "../types/contact";
 import ContactFormModal from "../components/contacts/ContactFormModal";
+import {
+  PageHeaderSkeleton,
+  FiltersSkeleton,
+  CardListSkeleton,
+} from "@/components/ui/skeleton";
 
 const Contacts: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -124,11 +129,10 @@ const Contacts: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-sm text-gray-600 mt-2">Carregando contatos...</p>
-        </div>
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <FiltersSkeleton />
+        <CardListSkeleton count={6} />
       </div>
     );
   }
