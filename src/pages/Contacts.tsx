@@ -45,9 +45,7 @@ const Contacts: React.FC = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | undefined>(
     undefined
   );
-  const [modalContact] = useState<Contact | undefined>(
-    undefined
-  );
+  const [modalContact] = useState<Contact | undefined>(undefined);
 
   useEffect(() => {
     loadContacts();

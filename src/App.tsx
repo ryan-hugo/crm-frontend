@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import PublicRoute from "./components/common/PublicRoute";
 import Layout from "./components/common/Layout";
@@ -22,49 +23,53 @@ import "./index.css";
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Rotas públicas */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            }
-          />
+      <NotificationProvider>
+        <Router>
+          <Routes>
+            {/* Rotas públicas */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PublicRoute>
+                  <Register />
+                </PublicRoute>
+              }
+            />
 
-          {/* Rotas protegidas */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="contacts" element={<Contacts />} />
-            <Route path="tasks" element={<Tasks />} />
-            <Route path="projects" element={<Projects />} />
-            <Route path="interactions" element={<Interactions />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="test" element={<TestFunctions />} />
-          </Route>
+            {/* Rotas protegidas */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="contacts" element={<Contacts />} />
+              <Route path="tasks" element={<Tasks />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="interactions" element={<Interactions />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="test" element={<TestFunctions />} />
 
-          {/* Rota de fallback */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
+              {/* Rota de fallback */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Route>
+
+            {/* Rota de fallback */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
