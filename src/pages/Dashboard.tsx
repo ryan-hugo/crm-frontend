@@ -439,55 +439,6 @@ const Dashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Performance Indicators */}
-      {stats && (stats.pending_tasks > 0 || stats.overdue_tasks > 0) && (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardHeader>
-            <CardTitle className="flex items-center text-yellow-800">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              Atenção Necessária
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {stats.overdue_tasks > 0 && (
-                <p className="text-yellow-700">
-                  • Você tem {stats.overdue_tasks} tarefa(s) em atraso
-                </p>
-              )}
-              {stats.pending_tasks > 0 && (
-                <p className="text-yellow-700">
-                  • Você tem {stats.pending_tasks} tarefa(s) pendente(s)
-                </p>
-              )}
-              {stats.active_projects > 0 && (
-                <p className="text-yellow-700">
-                  • Você tem {stats.active_projects} projeto(s) em andamento
-                </p>
-              )}
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Link to="/tasks">
-                <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700">
-                  Ver Tarefas
-                </Button>
-              </Link>
-              {stats.active_projects > 0 && (
-                <Link to="/projects">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white"
-                  >
-                    Ver Projetos
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Summary Insights */}
       {stats && (
         <Card>
@@ -541,6 +492,55 @@ const Dashboard: React.FC = () => {
                   {stats.completed_projects} de {stats.total_projects} projetos
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Performance Indicators */}
+      {stats && (stats.pending_tasks > 0 || stats.overdue_tasks > 0) && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-yellow-800">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              Atenção Necessária
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {stats.overdue_tasks > 0 && (
+                <p className="text-yellow-700">
+                  • Você tem {stats.overdue_tasks} tarefa(s) em atraso
+                </p>
+              )}
+              {stats.pending_tasks > 0 && (
+                <p className="text-yellow-700">
+                  • Você tem {stats.pending_tasks} tarefa(s) pendente(s)
+                </p>
+              )}
+              {stats.active_projects > 0 && (
+                <p className="text-yellow-700">
+                  • Você tem {stats.active_projects} projeto(s) em andamento
+                </p>
+              )}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Link to="/tasks">
+                <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700">
+                  Ver Tarefas
+                </Button>
+              </Link>
+              {stats.active_projects > 0 && (
+                <Link to="/projects">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white"
+                  >
+                    Ver Projetos
+                  </Button>
+                </Link>
+              )}
             </div>
           </CardContent>
         </Card>
