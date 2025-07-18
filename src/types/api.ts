@@ -14,6 +14,8 @@ export interface FilterParams {
   type?: string;
   status?: string;
   priority?: string;
+  contact_id?: number;
+  client_id?: number;
 }
 
 export interface UserStats {

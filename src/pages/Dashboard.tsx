@@ -455,11 +455,11 @@ const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
-                  {stats.total_contacts}
+                  {stats.recent_interactions}
                 </div>
-                <div className="text-sm text-blue-700">Total de Contatos</div>
+                <div className="text-sm text-blue-700">Interações Recentes</div>
                 <div className="text-xs text-blue-600 mt-1">
-                  {stats.total_clients} clientes + {stats.total_leads} leads
+                  Últimos 7 dias de {stats.total_interactions} totais
                 </div>
               </div>
 

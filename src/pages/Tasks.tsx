@@ -19,6 +19,7 @@ import { formatDate, isOverdue } from "../utils/formatters";
 import { PRIORITY_COLORS } from "../utils/constants";
 import type { Task, CreateTaskRequest, UpdateTaskRequest } from "../types/task";
 import TaskFormModal from "@/components/tasks/TaskFormModal";
+import ContactFilter from "@/components/common/ContactFilter";
 import {
   PageHeaderSkeleton,
   FiltersSkeleton,
@@ -32,6 +33,9 @@ const Tasks: React.FC = () => {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [contactFilter, setContactFilter] = useState<number | undefined>(
+    undefined
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
 
@@ -52,7 +56,7 @@ const Tasks: React.FC = () => {
     ); // Debounce de 500ms para busca
 
     return () => clearTimeout(timeoutId);
-  }, [statusFilter, searchTerm, currentPage]);
+  }, [statusFilter, searchTerm, contactFilter, currentPage]);
 
   const loadTasks = async () => {
     try {
@@ -65,6 +69,7 @@ const Tasks: React.FC = () => {
       };
       if (statusFilter) params.status = statusFilter;
       if (searchTerm) params.search = searchTerm;
+      if (contactFilter) params.contact_id = contactFilter;
 
       console.log("=== LOADING TASKS ===");
       console.log("Params:", params);
@@ -274,41 +279,49 @@ const Tasks: React.FC = () => {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Buscar tarefas..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Buscar tarefas..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant={statusFilter === "" ? "default" : "outline"}
-                onClick={() => setStatusFilter("")}
-                size="sm"
-              >
-                Todas
-              </Button>
-              <Button
-                variant={statusFilter === "PENDING" ? "default" : "outline"}
-                onClick={() => setStatusFilter("PENDING")}
-                size="sm"
-              >
-                Pendentes
-              </Button>
-              <Button
-                variant={statusFilter === "COMPLETED" ? "default" : "outline"}
-                onClick={() => setStatusFilter("COMPLETED")}
-                size="sm"
-              >
-                Concluídas
-              </Button>
+              <ContactFilter
+                selectedContactId={contactFilter}
+                onContactChange={setContactFilter}
+                placeholder="Filtrar por contato"
+              />
+
+              <div className="flex gap-2">
+                <Button
+                  variant={statusFilter === "" ? "default" : "outline"}
+                  onClick={() => setStatusFilter("")}
+                  size="sm"
+                >
+                  Todas
+                </Button>
+                <Button
+                  variant={statusFilter === "PENDING" ? "default" : "outline"}
+                  onClick={() => setStatusFilter("PENDING")}
+                  size="sm"
+                >
+                  Pendentes
+                </Button>
+                <Button
+                  variant={statusFilter === "COMPLETED" ? "default" : "outline"}
+                  onClick={() => setStatusFilter("COMPLETED")}
+                  size="sm"
+                >
+                  Concluídas
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>

@@ -22,6 +22,7 @@ import type {
   UpdateProjectRequest,
 } from "../types/project";
 import ProjectFormModal from "../components/projects/ProjectFormModal";
+import ContactFilter from "../components/common/ContactFilter";
 import {
   PageHeaderSkeleton,
   FiltersSkeleton,
@@ -34,6 +35,9 @@ const Projects: React.FC = () => {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [selectedContactId, setSelectedContactId] = useState<
+    number | undefined
+  >();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | undefined>(
     undefined
@@ -41,7 +45,7 @@ const Projects: React.FC = () => {
 
   useEffect(() => {
     loadProjects();
-  }, [statusFilter]);
+  }, [statusFilter, selectedContactId]);
 
   const loadProjects = async () => {
     try {
@@ -50,6 +54,7 @@ const Projects: React.FC = () => {
 
       const filters: any = {};
       if (statusFilter) filters.status = statusFilter;
+      if (selectedContactId) filters.client_id = selectedContactId;
 
       const data = await projectsService.getProjects(filters);
       setProjects(Array.isArray(data) ? data : []);
@@ -199,6 +204,11 @@ const Projects: React.FC = () => {
             </div>
 
             <div className="flex gap-2">
+              <ContactFilter
+                selectedContactId={selectedContactId}
+                onContactChange={setSelectedContactId}
+              />
+
               <Button
                 variant={statusFilter === "" ? "default" : "outline"}
                 onClick={() => setStatusFilter("")}

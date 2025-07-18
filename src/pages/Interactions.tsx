@@ -22,6 +22,7 @@ import type {
   UpdateInteractionRequest,
 } from "../types/interaction";
 import InteractionFormModal from "../components/interactions/InteractionFormModal";
+import ContactFilter from "../components/common/ContactFilter";
 import {
   PageHeaderSkeleton,
   FiltersSkeleton,
@@ -34,15 +35,17 @@ const Interactions: React.FC = () => {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [selectedContactId, setSelectedContactId] = useState<
+    number | undefined
+  >();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInteraction, setSelectedInteraction] = useState<
     Interaction | undefined
   >(undefined);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadInteractions();
-  }, [typeFilter]);
+  }, [typeFilter, selectedContactId]);
 
   const loadInteractions = async () => {
     try {
@@ -51,6 +54,7 @@ const Interactions: React.FC = () => {
 
       const filters: any = {};
       if (typeFilter) filters.type = typeFilter;
+      if (selectedContactId) filters.contact_id = selectedContactId;
 
       const data = await interactionsService.getInteractions(filters);
       setInteractions(Array.isArray(data) ? data : []);
@@ -117,13 +121,10 @@ const Interactions: React.FC = () => {
     }
 
     try {
-      setIsDeleting(true);
       await interactionsService.deleteInteraction(interactionId);
       loadInteractions();
     } catch (err: any) {
       setError(err.message);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -212,6 +213,11 @@ const Interactions: React.FC = () => {
             </div>
 
             <div className="flex gap-2">
+              <ContactFilter
+                selectedContactId={selectedContactId}
+                onContactChange={setSelectedContactId}
+              />
+
               <Button
                 variant={typeFilter === "" ? "default" : "outline"}
                 onClick={() => setTypeFilter("")}
