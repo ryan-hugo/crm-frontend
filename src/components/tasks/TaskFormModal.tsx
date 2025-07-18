@@ -27,6 +27,7 @@ interface TaskFormModalProps {
   onSubmit: (taskData: CreateTaskRequest | UpdateTaskRequest) => Promise<void>;
   task?: Task; // For editing existing tasks
   title: string;
+  contact?: Contact;
 }
 
 const TaskFormModal: React.FC<TaskFormModalProps> = ({
@@ -35,6 +36,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   onSubmit,
   task,
   title,
+  contact,
 }) => {
   const [taskTitle, setTaskTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -57,6 +59,13 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    // Garante que contactId é atualizado após carregar contatos
+    if (contact && isOpen) {
+      setContactId(String(contact.id));
+    }
+  }, [contact, isOpen]);
+
   // Populate form if editing existing task
   useEffect(() => {
     if (task) {
@@ -64,10 +73,18 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       setDescription(task.description || "");
       setDueDate(task.due_date ? task.due_date.split("T")[0] : "");
       setPriority(task.priority || "MEDIUM");
-      setContactId(task.contact_id?.toString() || "");
+      setContactId(task.contact_id ? String(task.contact_id) : "");
       setProjectId(task.project_id?.toString() || "");
+    } else if (contact) {
+      // Novo: sempre que abrir com contato, define o id
+      setTaskTitle("");
+      setDescription("");
+      setDueDate("");
+      setPriority("MEDIUM");
+      setContactId(String(contact.id));
+      setProjectId("");
     } else {
-      // Reset form for new task
+      // Reset form para nova tarefa sem contato
       setTaskTitle("");
       setDescription("");
       setDueDate("");
@@ -76,7 +93,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       setProjectId("");
     }
     setError("");
-  }, [task]);
+  }, [task, contact]);
 
   const loadDropdownData = async () => {
     try {
@@ -223,14 +240,30 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
           <div className="space-y-2">
             <Label htmlFor="task-contact">Contato</Label>
             <div className="flex gap-2">
-              <Select value={contactId} onValueChange={setContactId}>
+              <Select
+                value={contactId}
+                onValueChange={setContactId}
+                required
+                disabled={!!contact}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um contato (opcional)" />
+                  <SelectValue placeholder="Selecione um contato">
+                    {(() => {
+                      if (contactId) {
+                        const found = contacts.find(
+                          (c) => String(c.id) === String(contactId)
+                        );
+                        if (found) return found.name;
+                        if (contact) return contact.name;
+                      }
+                      return undefined;
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {contacts.map((contact) => (
-                    <SelectItem key={contact.id} value={contact.id.toString()}>
-                      {contact.name}
+                  {contacts.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

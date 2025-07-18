@@ -41,7 +41,7 @@ const Tasks: React.FC = () => {
 
   // Estados de paginação
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [, setTotalPages] = useState(1);
   const [pageSize] = useState(10); // Removido setter pois é fixo
   const [totalItems, setTotalItems] = useState(0);
   const [hasNext, setHasNext] = useState(false);
@@ -231,10 +231,6 @@ const Tasks: React.FC = () => {
     if (hasPrev) {
       setCurrentPage(currentPage - 1);
     }
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
   };
 
   const getPriorityText = (priority: string) => {

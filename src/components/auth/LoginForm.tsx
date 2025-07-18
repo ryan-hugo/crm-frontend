@@ -27,7 +27,6 @@ const LoginForm: React.FC = () => {
     register: registerField,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {

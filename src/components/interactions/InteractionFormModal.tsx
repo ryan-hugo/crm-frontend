@@ -27,6 +27,7 @@ interface InteractionFormModalProps {
   ) => Promise<void>;
   interaction?: Interaction; // For editing existing interactions
   title: string;
+  contact?: Contact;
 }
 
 const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
@@ -35,6 +36,7 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
   onSubmit,
   interaction,
   title,
+  contact,
 }) => {
   const [subject, setSubject] = useState("");
   const [notes, setNotes] = useState("");
@@ -55,9 +57,15 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
         console.error("Failed to load contacts", err);
       }
     };
-
     loadContacts();
-  }, []);
+  }, [isOpen]);
+
+  useEffect(() => {
+    // Garante que contactId é atualizado após carregar contatos
+    if (contact && isOpen) {
+      setContactId(String(contact.id));
+    }
+  }, [contact, isOpen]);
 
   // Populate form if editing existing interaction
   useEffect(() => {
@@ -69,8 +77,16 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
       setContactId(
         interaction.contact_id ? String(interaction.contact_id) : ""
       );
+    } else if (contact) {
+      // Novo: sempre que abrir com contato, define o id
+      const today = new Date().toISOString().split("T")[0];
+      setSubject("");
+      setNotes("");
+      setDate(today);
+      setType("EMAIL");
+      setContactId(String(contact.id));
     } else {
-      // Reset form for new interaction
+      // Reset form para novo sem contato
       const today = new Date().toISOString().split("T")[0];
       setSubject("");
       setNotes("");
@@ -78,7 +94,7 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
       setType("EMAIL");
       setContactId("");
     }
-  }, [interaction]);
+  }, [interaction, contact]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,18 +160,42 @@ const InteractionFormModal: React.FC<InteractionFormModalProps> = ({
             <Label htmlFor="interaction-contact">
               Contato <span className="text-red-500">*</span>
             </Label>
-            <Select value={contactId} onValueChange={setContactId} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um contato" />
-              </SelectTrigger>
-              <SelectContent>
-                {contacts.map((contact) => (
-                  <SelectItem key={contact.id} value={contact.id.toString()}>
-                    {contact.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2 items-center">
+              <Select
+                value={contactId}
+                onValueChange={setContactId}
+                required
+                disabled={!!contact}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um contato">
+                    {(() => {
+                      if (contactId) {
+                        const found = contacts.find(
+                          (c) => String(c.id) === String(contactId)
+                        );
+                        if (found) return found.name;
+                        if (contact) return contact.name;
+                      }
+                      return undefined;
+                    })()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {contacts.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {contact && contactId && (
+                <span className="text-xs text-gray-500">
+                  {contacts.find((c) => String(c.id) === String(contactId))
+                    ?.name || contact.name}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

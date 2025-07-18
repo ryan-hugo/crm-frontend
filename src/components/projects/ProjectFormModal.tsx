@@ -20,6 +20,7 @@ interface ProjectFormModalProps {
   ) => Promise<void>;
   project?: Project;
   title: string;
+  contact?: Contact;
 }
 
 const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
@@ -28,6 +29,7 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
   onSubmit,
   project,
   title,
+  contact,
 }) => {
   const [formData, setFormData] = useState<
     CreateProjectRequest | UpdateProjectRequest
@@ -41,6 +43,7 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
   const [clients, setClients] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [clientId, setClientId] = useState<string>("");
 
   useEffect(() => {
     if (isOpen) {
@@ -57,6 +60,16 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
           client_id: project.client_id,
           status: project.status,
         });
+        setClientId(project.client_id ? String(project.client_id) : "");
+      } else if (contact) {
+        setFormData({
+          name: "",
+          description: "",
+          start_date: "",
+          end_date: "",
+          client_id: contact.id,
+        });
+        setClientId(String(contact.id));
       } else {
         setFormData({
           name: "",
@@ -65,9 +78,10 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
           end_date: "",
           client_id: undefined,
         });
+        setClientId("");
       }
     }
-  }, [isOpen, project]);
+  }, [isOpen, project, contact]);
 
   const loadClients = async () => {
     try {
@@ -200,9 +214,10 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                 <select
                   id="client_id"
                   name="client_id"
-                  value={formData.client_id || ""}
+                  value={clientId}
                   onChange={handleChange}
                   className="w-full p-2 border rounded-md"
+                  disabled={!!contact}
                 >
                   <option value="">Selecione um cliente</option>
                   {clients.map((client) => (
@@ -211,6 +226,13 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({
                     </option>
                   ))}
                 </select>
+                {contact && clientId && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    Cliente selecionado:{" "}
+                    {clients.find((c) => c.id === contact.id)?.name ||
+                      contact.name}
+                  </div>
+                )}
               </div>
 
               {project && (

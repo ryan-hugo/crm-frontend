@@ -21,6 +21,10 @@ import type {
   UpdateContactRequest,
 } from "../types/contact";
 import ContactFormModal from "../components/contacts/ContactFormModal";
+import ContactDetailsModal from "../components/contacts/ContactDetailsModal";
+import InteractionFormModal from "../components/interactions/InteractionFormModal";
+import TaskFormModal from "../components/tasks/TaskFormModal";
+import ProjectFormModal from "../components/projects/ProjectFormModal";
 import {
   PageHeaderSkeleton,
   FiltersSkeleton,
@@ -34,10 +38,16 @@ const Contacts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isInteractionModalOpen, setIsInteractionModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | undefined>(
     undefined
   );
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [modalContact, setModalContact] = useState<Contact | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     loadContacts();
@@ -70,8 +80,33 @@ const Contacts: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleOpenDetailsModal = (contact: Contact) => {
+    setSelectedContact(contact);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleOpenInteractionModal = (contact: Contact) => {
+    setModalContact(contact);
+    setIsInteractionModalOpen(true);
+  };
+
+  const handleOpenTaskModal = (contact: Contact) => {
+    setModalContact(contact);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleOpenProjectModal = (contact: Contact) => {
+    setModalContact(contact);
+    setIsProjectModalOpen(true);
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setSelectedContact(undefined);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
     setSelectedContact(undefined);
   };
 
@@ -107,13 +142,10 @@ const Contacts: React.FC = () => {
     }
 
     try {
-      setIsDeleting(true);
       await contactsService.deleteContact(contactId);
       loadContacts();
     } catch (err: any) {
       setError(err.message);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -282,7 +314,11 @@ const Contacts: React.FC = () => {
 
                 <div className="flex justify-between items-center mt-4">
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenDetailsModal(contact)}
+                    >
                       Ver Detalhes
                     </Button>
                     <Button
@@ -319,6 +355,56 @@ const Contacts: React.FC = () => {
         onSubmit={handleSubmitContact}
         contact={selectedContact}
         title={selectedContact ? "Editar Contato" : "Novo Contato"}
+      />
+
+      {/* Contact Details Modal */}
+      <ContactDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        contact={selectedContact}
+        onEdit={(contact) => {
+          setIsDetailsModalOpen(false);
+          handleOpenEditModal(contact);
+        }}
+        onCreateInteraction={handleOpenInteractionModal}
+        onCreateTask={handleOpenTaskModal}
+        onAddToProject={handleOpenProjectModal}
+      />
+
+      {/* Interaction Form Modal */}
+      <InteractionFormModal
+        isOpen={isInteractionModalOpen}
+        onClose={() => setIsInteractionModalOpen(false)}
+        onSubmit={async () => {
+          setIsInteractionModalOpen(false);
+        }}
+        interaction={undefined}
+        title="Nova Interação"
+        contact={modalContact}
+      />
+
+      {/* Task Form Modal */}
+      <TaskFormModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        onSubmit={async () => {
+          setIsTaskModalOpen(false);
+        }}
+        task={undefined}
+        title="Nova Tarefa"
+        contact={modalContact}
+      />
+
+      {/* Project Form Modal */}
+      <ProjectFormModal
+        isOpen={isProjectModalOpen}
+        onClose={() => setIsProjectModalOpen(false)}
+        onSubmit={async () => {
+          setIsProjectModalOpen(false);
+        }}
+        project={undefined}
+        title="Novo Projeto"
+        contact={modalContact}
       />
     </div>
   );

@@ -23,7 +23,7 @@ import { tasksService } from "../services/tasks";
 import { projectsService } from "../services/projects";
 import { interactionsService } from "../services/interactions";
 import { useAuth } from "../hooks/useAuth";
-import type { UserStats, DashboardData, RecentActivity } from "../types/api";
+import type { UserStats, DashboardData } from "../types/api";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
